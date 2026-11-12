@@ -5,7 +5,7 @@
   const $ = (s) => document.querySelector(s);
   const app = $('#app'), overlay = $('#overlay'), banner = $('#banner'), hand = $('#hand');
   const slotEls = Array.prototype.slice.call(document.querySelectorAll('.slot'));
-  const cupEl = $('#cup'), statusEl = $('#status');
+  const cupEl = $('#cup');
   const hudRound = $('#hudRound'), hudTime = $('#hudTime'), hudCash = $('#hudCash'), tbar = $('#tbar');
   const drinkBtns = {}, topBtns = {};
 
@@ -101,11 +101,6 @@
     const cup = G.cup, h = cup.drink ? 72 * cup.brew : 0;
     cupLiq.setAttribute('y', 115 - h); cupLiq.setAttribute('height', h);
     cupFoam.setAttribute('y', 115 - h); cupFoam.setAttribute('height', h > 4 ? 4 : 0);
-    let msg = 'Pick a drink', ready = false;
-    if (cup.drink && cup.brew < 1) msg = 'Brewing…';
-    else if (cup.drink) { msg = 'Ready! Tap a customer'; ready = true; }
-    if (statusEl.textContent !== msg) statusEl.textContent = msg;
-    statusEl.classList.toggle('ready', ready);
   }
 
   // ---------- customers ----------
