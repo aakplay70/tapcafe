@@ -38,9 +38,18 @@
 
   TC.DRINKS = ['milk', 'taro', 'mango'];
   TC.DRINK_INFO = {
-    milk: { name: 'Milk tea', col: '#C99A6B' },
+    milk: { name: 'Milk tea', col: '#A87650' },
     taro: { name: 'Taro', col: '#B79AE0' },
-    mango: { name: 'Mango', col: '#FFD98A' },
+    mango: { name: 'Mango', col: '#FFB830' },
+  };
+  // A small symbol on each cup, so drinks are not told apart by colour alone.
+  const MARKS = {
+    milk: '<path d="M50 59 C58 62 58 72 50 77 C42 72 42 62 50 59 Z M50 62 V75" fill="#7BC47F" stroke="#4A2B3D" stroke-width="1.6" stroke-linejoin="round"/>',
+    taro: '<path d="M50 76 C40 69 42 60 47 60 C49 60 50 62 50 63 C50 62 51 60 53 60 C58 60 60 69 50 76 Z" fill="#8E6BD6" stroke="#4A2B3D" stroke-width="1.6" stroke-linejoin="round"/>',
+    mango: '<path d="M50 58.5 l2.6 5.6 6.1 .7 -4.5 4.2 1.2 6 -5.4 -3 -5.4 3 1.2 -6 -4.5 -4.2 6.1 -.7z" fill="#FF8A3D" stroke="#4A2B3D" stroke-width="1.6" stroke-linejoin="round"/>',
+  };
+  TC.drinkMark = function (d) {
+    return d ? '<circle cx="50" cy="68" r="12" fill="#fff" stroke="#4A2B3D" stroke-width="2"/>' + MARKS[d] : '';
   };
   TC.TOPS = ['pearls', 'jelly', 'popping'];
   TC.TOP_INFO = {
@@ -108,6 +117,7 @@ ${tg}
 <rect x="31" y="40" width="5" height="60" rx="2.5" fill="#fff" fill-opacity=".5" transform="rotate(-5 33 70)"/>
 </g>
 <path d="${CUP_BODY}" fill="none" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
+<g class="mark">${TC.drinkMark(drink)}</g>
 <path d="M22 32 Q50 12 78 32 Z" fill="#fff" fill-opacity=".85" stroke="${INK}" stroke-width="3" stroke-linejoin="round"/>
 <rect x="18" y="30" width="64" height="7" rx="3.5" fill="#fff" stroke="${INK}" stroke-width="3"/>
 </svg>`;

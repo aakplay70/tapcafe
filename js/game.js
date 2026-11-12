@@ -46,9 +46,20 @@
       $('#tops').appendChild(b); topBtns[t] = b;
     });
     $('#toss').addEventListener('pointerdown', (e) => { e.preventDefault(); if (G.playing) resetCup(); });
+    // The whole column above the counter is the tap target, not just the character.
+    slotEls.forEach((s, i) => s.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const c = G.slots && G.slots[i];
+      if (c) tapCustomer(c);
+    }));
     cupEl.innerHTML = TC.cupSVG(null, [], 0, true);
     cupLiq = cupEl.querySelector('.liq'); cupFoam = cupEl.querySelector('.foam');
     cupEl.querySelectorAll('.tg').forEach((g) => { cupGroups[g.dataset.t] = g; });
+  }
+
+  function renderUps() {
+    $('#ups').innerHTML = Object.keys(C.upgrades).filter((k) => G.ups[k]).map((k) =>
+      '<span class="upb" title="' + C.upgrades[k].name + '">' + C.upgrades[k].ico + (G.ups[k] > 1 ? '×' + G.ups[k] : '') + '</span>').join('');
   }
 
   function brewTime() { return C.brew / Math.pow(2, G.ups.turbo); }
@@ -75,6 +86,7 @@
   }
   function renderCup() {
     const cup = G.cup;
+    if (G.pending && !matches(G.pending)) clearPending();
     TC.DRINKS.forEach((d) => drinkBtns[d].classList.toggle('on', cup.drink === d));
     TC.TOPS.forEach((t) => {
       const on = cup.tops.indexOf(t) >= 0;
@@ -82,6 +94,7 @@
       cupGroups[t].style.display = on ? '' : 'none';
     });
     if (cup.drink) cupLiq.setAttribute('fill', TC.DRINK_INFO[cup.drink].col);
+    cupEl.querySelector('.mark').innerHTML = TC.drinkMark(cup.drink);
     renderFill();
   }
   function renderFill() {
@@ -108,7 +121,6 @@
     el.innerHTML = '<div class="order">' + orderHTML(def.order) + '</div><div class="fig">' + TC.customerSVG(def.look, 0) + '</div><div class="pbar"><i></i></div>';
     const c = { def, look: def.look, order: def.order, P, slot, max, patience: max, mood: 0, state: 'wait', el,
       fig: el.querySelector('.fig'), pbar: el.querySelector('.pbar'), bar: el.querySelector('.pbar i') };
-    el.addEventListener('pointerdown', (e) => { e.preventDefault(); tapCustomer(c); });
     slotEls[slot].appendChild(el);
     G.slots[slot] = c;
     say(c, P.greet);
@@ -143,7 +155,8 @@
   }
   function leave(c, cls, ms) {
     c.state = 'leaving';
-    c.el.classList.remove('enter', 'nope', 'tut');
+    if (G.pending === c) G.pending = null;
+    c.el.classList.remove('enter', 'nope', 'tut', 'next');
     c.el.classList.add(cls);
     setTimeout(() => {
       c.el.remove();
@@ -161,14 +174,28 @@
       c.order.tops.every((t) => cup.tops.indexOf(t) >= 0);
   }
 
+  function clearPending() {
+    if (G.pending) G.pending.el.classList.remove('next');
+    G.pending = null;
+  }
+
   function tapCustomer(c) {
     if (!G.playing || c.state !== 'wait') return;
     const cup = G.cup;
     if (!cup.drink) { nudge(cupEl, 'shake'); return; }
-    if (cup.brew < 1) { nudge(cupEl, 'shake'); pop(c, 'Still brewing!', 'bonus'); return; }
     if (!matches(c)) { say(c, 'Not mine!'); nudge(c.el, 'nope'); return; }
+    if (cup.brew < 1) {
+      // Tap-ahead: remember the customer and serve the moment the brew is done.
+      clearPending();
+      G.pending = c; c.el.classList.add('next');
+      return;
+    }
+    serve(c);
+  }
 
-    // serve
+  function serve(c) {
+    clearPending();
+    if (navigator.vibrate) { try { navigator.vibrate(8); } catch (e) { /* no haptics */ } }
     const tip = Math.round(C.maxTip * Math.max(0, c.patience / c.max));
     G.streak++;
     G.bestStreak = Math.max(G.bestStreak, G.streak);
@@ -236,6 +263,8 @@
       ups: { comfy: 0, turbo: 0, tip: 0 }, slots: [null, null, null], tutorial: false, playing: false,
     });
     slotEls.forEach((s) => { s.innerHTML = ''; });
+    G.pending = null;
+    renderUps();
     overlay.hidden = true;
     startRound();
   }
@@ -274,7 +303,11 @@
     if (cup.drink && cup.brew < 1) {
       cup.brew = Math.min(1, cup.brew + dt / brewTime());
       renderFill();
-      if (cup.brew >= 1) nudge(cupEl, 'ding');
+      if (cup.brew >= 1) {
+        nudge(cupEl, 'ding');
+        const p = G.pending;
+        if (p && p.state === 'wait' && matches(p)) serve(p);
+      }
     }
     if (G.tutorial) return;
 
@@ -366,7 +399,9 @@
       const k = b.dataset.k, U = C.upgrades[k];
       if (G.cash < U.price) return;
       G.cash -= U.price; G.spent += U.price; G.ups[k]++;
+      renderUps();
       next();
+      setTimeout(() => showBanner(U.ico + ' ' + U.name + '!', 1000), 1150);
     }));
     $('#bSkip').addEventListener('click', next);
   }

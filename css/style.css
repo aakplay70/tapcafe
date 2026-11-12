@@ -162,6 +162,17 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   background: #fff; border: .16rem solid var(--ink); border-radius: 1rem;
   box-shadow: 0 .25rem 0 var(--ink);
 }
+.side { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
+#ups { display: flex; gap: .25rem; min-height: 1.7rem; }
+.upb {
+  background: var(--mint); border: .12rem solid var(--ink); border-radius: 1rem;
+  padding: .05rem .45rem; font-size: .95rem; line-height: 1.4; white-space: nowrap;
+  animation: bump .4s;
+}
+.cust.next .order { box-shadow: 0 0 0 .22rem var(--mint2); }
+.cust.next .fig { transform: scale(1.04); }
+.cust, .st, #toss { will-change: transform; }
+.slot { cursor: pointer; -webkit-touch-callout: none; }
 #toss:active { transform: translateY(.2rem); box-shadow: 0 .05rem 0 var(--ink); }
 
 .btnrow { display: flex; gap: .6rem; }
