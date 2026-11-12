@@ -45,7 +45,7 @@
       b.addEventListener('pointerdown', (e) => { e.preventDefault(); toggleTop(t); });
       $('#tops').appendChild(b); topBtns[t] = b;
     });
-    $('#toss').addEventListener('pointerdown', (e) => { e.preventDefault(); if (G.playing) resetCup(); });
+    $('#toss').addEventListener('pointerdown', (e) => { e.preventDefault(); if (G.playing) { if (G.cup.drink || G.cup.tops.length) TC.audio.sfx('toss'); resetCup(); } });
     // The whole column above the counter is the tap target, not just the character.
     slotEls.forEach((s, i) => s.addEventListener('pointerdown', (e) => {
       e.preventDefault();
@@ -71,11 +71,14 @@
   function pickDrink(d) {
     if (!G.playing || G.cup.drink === d) return;
     G.cup.drink = d; G.cup.brew = 0;
+    TC.audio.sfx('drink', TC.DRINKS.indexOf(d));
+    TC.audio.sfx('pour', brewTime());
     renderCup();
   }
   function toggleTop(t) {
     if (!G.playing) return;
     const i = G.cup.tops.indexOf(t);
+    TC.audio.sfx('top', i < 0);
     if (i >= 0) G.cup.tops.splice(i, 1);
     else {
       G.cup.tops.push(t);
@@ -119,6 +122,7 @@
     slotEls[slot].appendChild(el);
     G.slots[slot] = c;
     say(c, P.greet);
+    TC.audio.sfx('bell');
     return c;
   }
 
@@ -178,11 +182,12 @@
     if (!G.playing || c.state !== 'wait') return;
     const cup = G.cup;
     if (!cup.drink) { nudge(cupEl, 'shake'); return; }
-    if (!matches(c)) { say(c, 'Not mine!'); nudge(c.el, 'nope'); return; }
+    if (!matches(c)) { say(c, 'Not mine!'); nudge(c.el, 'nope'); TC.audio.sfx('wrong'); return; }
     if (cup.brew < 1) {
       // Tap-ahead: remember the customer and serve the moment the brew is done.
       clearPending();
       G.pending = c; c.el.classList.add('next');
+      TC.audio.sfx('queue');
       return;
     }
     serve(c);
@@ -198,6 +203,7 @@
     const pay = C.price + C.perTopping * c.order.tops.length + tip + 2 * G.ups.tip + bonus;
     G.cash += pay; G.earned += pay; G.served++;
     say(c, ['Yum!', 'Thanks!', 'So good!', 'Yesss!'][G.served % 4]);
+    TC.audio.sfx('serve', G.streak);
     pop(c, 'Order up!');
     pop(c, '+$' + pay, 'cash');
     if (bonus) pop(c, '+bonus', 'bonus');
@@ -211,6 +217,7 @@
 
   function walkout(c) {
     G.walkouts++; G.streak = 0;
+    TC.audio.sfx('walkout');
     say(c, "hmph… I'm out");
     leave(c, 'walk', 900);
   }
@@ -269,6 +276,8 @@
     resetCup();
     renderHud();
     showBanner('Round ' + (G.round + 1), 1100);
+    TC.audio.sfx('round', G.round + 1);
+    TC.audio.music('r' + (G.round + 1));
     setTimeout(() => {
       G.playing = true;
       if (G.round === 0 && !store.get('tutorialSeen')) {
@@ -287,6 +296,7 @@
     G.slots.forEach((c) => { if (c && c.state === 'wait') leave(c, 'bye', 700); });
     resetCup();
     showBanner("Time's up!", 1000);
+    TC.audio.sfx('timeup');
     setTimeout(() => {
       if (G.round < C.rounds.length - 1) showUpgrade();
       else showEnd();
@@ -300,6 +310,7 @@
       renderFill();
       if (cup.brew >= 1) {
         nudge(cupEl, 'ding');
+        TC.audio.sfx('ready');
         const p = G.pending;
         if (p && p.state === 'wait' && matches(p)) serve(p);
       }
@@ -322,6 +333,7 @@
         c.fig.innerHTML = TC.customerSVG(c.look, mood);
         c.pbar.className = 'pbar m' + mood;
         say(c, mood === 1 ? c.P.impatient : c.P.grumpy);
+        TC.audio.sfx('impatient', mood);
       }
       if (c.patience <= 0) walkout(c);
     }
@@ -362,6 +374,7 @@
   }
 
   function showTitle() {
+    TC.audio.music('lobby');
     daily = TC.buildDaily(TC.dateStr());
     const best = getBest(daily.ds);
     const heroes = daily.rounds[0].slice(0, 3).map((c) => TC.customerSVG(c.look, 0)).join('');
@@ -376,6 +389,7 @@
   }
 
   function showUpgrade() {
+    TC.audio.music('lobby');
     const offers = daily.offers[G.round];
     const cards = offers.map((k) => {
       const U = C.upgrades[k], own = G.ups[k];
@@ -394,6 +408,7 @@
       const k = b.dataset.k, U = C.upgrades[k];
       if (G.cash < U.price) return;
       G.cash -= U.price; G.spent += U.price; G.ups[k]++;
+      TC.audio.sfx('buy');
       renderUps();
       next();
       setTimeout(() => showBanner(U.ico + ' ' + U.name + '!', 1000), 1150);
@@ -412,6 +427,8 @@
 
   function showEnd() {
     const score = G.earned, stars = TC.starsFor(score);
+    TC.audio.music('lobby');
+    TC.audio.sfx('fanfare', stars);
     const prev = getBest(daily.ds);
     const isBest = !prev || score > prev.score;
     if (isBest) store.set('best.' + daily.ds, JSON.stringify({ score }));
@@ -482,6 +499,12 @@
   }
   document.addEventListener('visibilitychange', () => { last = performance.now(); });
 
+  const muteBtn = $('#mute');
+  const paintMute = () => { muteBtn.textContent = TC.audio.isMuted() ? '🔇' : '🔊'; };
+  muteBtn.addEventListener('click', () => { TC.audio.unlock(); TC.audio.toggleMute(); paintMute(); });
+  paintMute();
+  document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.btn')) TC.audio.sfx('tap'); });
+
   buildStations();
   Object.assign(G, { round: 0, cash: 0, time: 0, ups: { comfy: 0, turbo: 0, tip: 0 }, slots: [null, null, null], cup: { drink: null, tops: [], brew: 0 } });
   renderHud();
@@ -489,4 +512,5 @@
   requestAnimationFrame(frame);
 
   TC._G = G; // handy for debugging in the console
+  TC._dbg = { spawn, update, matches };
 })();
