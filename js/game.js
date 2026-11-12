@@ -1,4 +1,4 @@
-/* Tap Café — game loop, screens and input. */
+﻿/* Tap Café — game loop, screens and input. */
 (function () {
   'use strict';
   const TC = window.TC, C = TC.CFG;
@@ -110,7 +110,7 @@
 
   // ---------- customers ----------
   function orderHTML(o) {
-    return TC.cupSVG(o.drink, o.tops, 1).replace('class="cupsvg"', 'class="cupsvg ocup"') + o.tops.map(TC.topIcon).join('');
+    return TC.cupSVG(o.drink, o.tops, 1).replace('class="cupsvg"', 'class="cupsvg ocup"') + (o.tops.length ? '<span class="otops">' + o.tops.map(TC.topIcon).join('') + '</span>' : '');
   }
 
   function spawn(def, slot) {

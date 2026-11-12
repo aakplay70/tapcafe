@@ -60,7 +60,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 /* ---------- shop ---------- */
 #shop {
   position: relative;
-  flex: 1 1 19.5rem; min-height: 0;
+  flex: 1 1 19rem; min-height: 0;
   display: flex; align-items: flex-end;
   padding: 0 .25rem;
   background:
@@ -91,7 +91,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .order {
   position: relative;
   display: flex; align-items: center; justify-content: center; gap: .1rem;
-  min-width: 3.4rem; height: 3.2rem; padding: .2rem .45rem;
+  min-width: 3.6rem; min-height: 3.9rem; padding: .25rem .4rem;
   background: #fff; border: .16rem solid var(--ink); border-radius: 1.1rem;
   margin-bottom: .35rem;
 }
@@ -100,9 +100,10 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   background: #fff; border-right: .16rem solid var(--ink); border-bottom: .16rem solid var(--ink);
   transform: translateX(-50%) rotate(45deg);
 }
-.order .ocup { width: 2rem; height: 2.4rem; }
-.order .otop { width: 1.3rem; height: 1.3rem; }
-.fig { width: 7.2rem; height: 9rem; }
+.order .ocup { width: 2.7rem; height: 3.25rem; flex: none; }
+.order .otops { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; max-width: 3.6rem; }
+.order .otop { width: 1.75rem; height: 1.75rem; }
+.fig { width: 6.8rem; height: 8.5rem; }
 .fig svg { width: 100%; height: 100%; display: block; overflow: visible; }
 .pbar {
   position: absolute; bottom: .55rem; left: 50%; transform: translateX(-50%);
@@ -143,16 +144,16 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 
 /* ---------- work area ---------- */
 #work {
-  flex: 1.4 1 20.4rem; min-height: 0;
+  flex: 1.4 1 21.8rem; min-height: 0;
   display: flex; flex-direction: column; justify-content: space-evenly;
   padding: .3rem .7rem .6rem;
   background: var(--cream);
   border-top: .16rem solid var(--ink);
 }
-.cuprow { display: grid; grid-template-columns: 1fr 6.2rem 1fr; align-items: center; height: 7.6rem; }
+.cuprow { display: grid; grid-template-columns: 1fr 7rem 1fr; align-items: center; height: 8.6rem; }
 #status { font-size: .95rem; text-align: center; opacity: .8; padding: 0 .3rem; line-height: 1.2; }
 #status.ready { color: var(--green); opacity: 1; font-weight: 700; }
-#cup { height: 7.6rem; }
+#cup { height: 8.6rem; }
 #cup svg { height: 100%; width: 100%; display: block; }
 #cup.shake { animation: shake .3s; }
 #cup.ding { animation: bump .3s; }
@@ -177,15 +178,15 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 
 .btnrow { display: flex; gap: .6rem; }
 .st {
-  flex: 1; height: 5.2rem;
+  flex: 1; height: 5.5rem;
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .1rem;
   background: #fff; border: .16rem solid var(--ink); border-radius: 1.2rem;
   box-shadow: 0 .3rem 0 var(--ink);
   font-size: .85rem;
   transition: transform .06s, box-shadow .06s, background .1s;
 }
-.st svg { width: 2.5rem; height: 2.9rem; }
-.st.top svg { width: 2.4rem; height: 2.4rem; }
+.st svg { width: 3rem; height: 3.5rem; }
+.st.top svg { width: 3.1rem; height: 3.1rem; }
 .st:active, .st.on { transform: translateY(.22rem); box-shadow: 0 .08rem 0 var(--ink); }
 .st.on { background: #FFE1EA; border-color: var(--accent); box-shadow: 0 .08rem 0 var(--accent-d); color: var(--accent-d); }
 
