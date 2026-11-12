@@ -267,6 +267,7 @@
     slotEls.forEach((s) => { s.innerHTML = ''; });
     G.pending = null;
     renderUps();
+    TC.track('game_start', { daily: daily.num });
     overlay.hidden = true;
     startRound();
   }
@@ -383,7 +384,8 @@
       '<div class="heroes">' + heroes + '</div>' +
       '<div class="daily">Daily #' + daily.num + ' · ' + TC.prettyDate(daily.ds) + '</div>' +
       '<div class="muted">' + (best ? 'Your best today: <b>$' + best.score + '</b>' : 'Make the drink. Tap the customer. Two minutes!') + '</div>' +
-      '<div class="row"><button class="btn" id="bPlay" type="button">Play</button></div>'
+      '<div class="row"><button class="btn" id="bPlay" type="button">Play</button></div>' +
+      '<div class="muted fine">Anonymous play stats help improve the game.</div>'
     );
     $('#bPlay').addEventListener('click', startGame);
   }
@@ -429,6 +431,7 @@
     const score = G.earned, stars = TC.starsFor(score);
     TC.audio.music('lobby');
     TC.audio.sfx('fanfare', stars);
+    TC.track('game_end', { daily: daily.num, score, stars, served: G.served, walkouts: G.walkouts });
     const prev = getBest(daily.ds);
     const isBest = !prev || score > prev.score;
     if (isBest) store.set('best.' + daily.ds, JSON.stringify({ score }));
@@ -443,7 +446,7 @@
       '<div class="muted" style="margin-top:.8rem">Next challenge in <b id="cd">' + countdownText() + '</b></div>'
     );
     $('#bAgain').addEventListener('click', startGame);
-    $('#bShare').addEventListener('click', () => showShare(best));
+    $('#bShare').addEventListener('click', () => { TC.track('share_open', { daily: daily.num }); showShare(best); });
     clearInterval(countdownTimer);
     countdownTimer = setInterval(() => { const e = $('#cd'); if (e) e.textContent = countdownText(); }, 1000);
   }

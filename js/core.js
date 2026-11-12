@@ -1,7 +1,7 @@
 ﻿/* Tap Café — config, seeded random, and all the SVG art. */
 (function () {
   'use strict';
-  const TC = (window.TC = {});
+  const TC = (window.TC = window.TC || {});
 
   // ---------- Tuning numbers (all in one place) ----------
   TC.CFG = {
