@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#FFDCE8">
+<title>Tap Café</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+  <header id="hud">
+    <div class="hud-round" id="hudRound">Round 1/3</div>
+    <div class="hud-timer"><div class="tbar"><i id="tbar"></i></div><span id="hudTime">25</span></div>
+    <div class="hud-cash" id="hudCash">$0</div>
+  </header>
+
+  <section id="shop">
+    <div class="slot" data-slot="0"></div>
+    <div class="slot" data-slot="1"></div>
+    <div class="slot" data-slot="2"></div>
+    <div id="counter"></div>
+  </section>
+
+  <section id="work">
+    <div class="cuprow">
+      <div id="status">Pick a drink</div>
+      <div id="cup"></div>
+      <button id="toss" type="button" aria-label="Toss the cup">Toss</button>
+    </div>
+    <div class="btnrow" id="drinks"></div>
+    <div class="btnrow" id="tops"></div>
+  </section>
+
+  <div id="banner" hidden></div>
+  <div id="hand" hidden>👆</div>
+  <div id="overlay" hidden></div>
+</div>
+<script src="js/core.js"></script>
+<script src="js/share.js"></script>
+<script src="js/game.js"></script>
+</body>
+</html>
