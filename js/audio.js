@@ -55,7 +55,9 @@
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + o.dur);
     src.connect(f); f.connect(g); g.connect(o.bus || sfxBus);
     src.start(t0, Math.random() * 0.5); src.stop(t0 + o.dur + 0.05);
+    return g;
   }
+  let pourGain = null;
 
   // ---------- sound effects ----------
   const S = {
@@ -70,7 +72,7 @@
       if (on) { tone({ f, to: f * 0.45, dur: 0.14, vol: 0.34 }); noise({ f: 2800, q: 2, dur: 0.06, vol: 0.06 }); }
       else tone({ f: f * 0.8, to: f * 1.25, dur: 0.09, vol: 0.18 });
     },
-    pour(d) { noise({ f: 900, to: 2400, q: 1.6, dur: d, vol: 0.2, attack: 0.05 }); },
+    pour(d) { A.stopPour(); pourGain = noise({ f: 900, to: 2400, q: 1.6, dur: d, vol: 0.2, attack: 0.05 }); },
     ready() {
       const f = r(1040, 1110), t = ctx.currentTime;
       tone({ f, dur: 0.5, vol: 0.28 });
@@ -206,6 +208,15 @@
       return muted;
     },
     isMuted() { return muted; },
+    // Cut the pouring sound short when the drink is tossed, swapped or served.
+    stopPour() {
+      if (!pourGain || !ctx) return;
+      try {
+        pourGain.gain.cancelScheduledValues(ctx.currentTime);
+        pourGain.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.02);
+      } catch (e) { /* already finished */ }
+      pourGain = null;
+    },
     state() { return ctx ? ctx.state : 'none'; },
     names() { return Object.keys(S); },
   });

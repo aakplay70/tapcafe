@@ -156,8 +156,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   border-top: .16rem solid var(--ink);
 }
 .cuprow { display: grid; grid-template-columns: 1fr 7rem 1fr; align-items: center; height: 8.6rem; }
-#status { font-size: .95rem; text-align: center; opacity: .8; padding: 0 .3rem; line-height: 1.2; }
-#status.ready { color: var(--green); opacity: 1; font-weight: 700; }
 #cup { height: 8.6rem; }
 #cup svg { height: 100%; width: 100%; display: block; }
 #cup.shake { animation: shake .3s; }
@@ -168,7 +166,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   background: #fff; border: .16rem solid var(--ink); border-radius: 1rem;
   box-shadow: 0 .25rem 0 var(--ink);
 }
-.side { display: flex; flex-direction: column; align-items: center; gap: .5rem; }
 #ups { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: .35rem; padding: 0 .3rem; }
 .upb {
   background: var(--mint); border: .12rem solid var(--ink); border-radius: 1rem;
@@ -249,7 +246,6 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 .btn:active { transform: translateY(.22rem); box-shadow: 0 .08rem 0 var(--ink); }
 .btn.alt { background: #fff; color: var(--ink); }
 .btn.sm { font-size: 1rem; padding: .6rem .6rem; }
-.btn + .btn.block { margin-top: .7rem; }
 
 .ups { display: flex; gap: .6rem; margin: .8rem 0 .2rem; }
 .up {

@@ -14,7 +14,12 @@
     get(k) { try { return localStorage.getItem('tapcafe.' + k); } catch (e) { return null; } },
     set(k, v) { try { localStorage.setItem('tapcafe.' + k, v); } catch (e) { /* private mode */ } },
   };
-  function getBest(ds) { const v = store.get('best.' + ds); return v ? JSON.parse(v) : null; }
+  function getBest(ds) {
+    try {
+      const b = JSON.parse(store.get('best.' + ds));
+      return b && typeof b.score === 'number' ? b : null;
+    } catch (e) { return null; } // a damaged save should never block the title screen
+  }
 
   // ---------- state ----------
   let daily = TC.buildDaily(TC.dateStr());
@@ -66,6 +71,7 @@
 
   function resetCup() {
     G.cup = { drink: null, tops: [], brew: 0 };
+    TC.audio.stopPour();
     renderCup();
   }
   function pickDrink(d) {
@@ -443,9 +449,11 @@
       '<div class="stats"><div><b>' + G.served + '</b>served</div><div><b>' + G.walkouts + '</b>walkouts</div><div><b>' + G.bestStreak + '</b>best streak</div></div>' +
       '<div class="muted">Spent on upgrades: $' + G.spent + ' · ' + (isBest ? 'New best today!' : 'Best today: $' + best.score) + '</div>' +
       '<div class="row"><button class="btn alt" id="bAgain" type="button">Replay</button><button class="btn" id="bShare" type="button">Share</button></div>' +
+      '<div class="row"><button class="btn alt sm" id="bHome" type="button">Home</button></div>' +
       '<div class="muted" style="margin-top:.8rem">Next challenge in <b id="cd">' + countdownText() + '</b></div>'
     );
     $('#bAgain').addEventListener('click', startGame);
+    $('#bHome').addEventListener('click', () => { clearInterval(countdownTimer); showTitle(); });
     $('#bShare').addEventListener('click', () => { TC.track('share_open', { daily: daily.num }); showShare(best); });
     clearInterval(countdownTimer);
     countdownTimer = setInterval(() => { const e = $('#cd'); if (e) e.textContent = countdownText(); }, 1000);
@@ -513,7 +521,4 @@
   renderHud();
   showTitle();
   requestAnimationFrame(frame);
-
-  TC._G = G; // handy for debugging in the console
-  TC._dbg = { spawn, update, matches };
 })();
