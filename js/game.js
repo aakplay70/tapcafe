@@ -28,10 +28,15 @@
   let countdownTimer = 0;
 
   function fit() {
-    const s = Math.min(window.innerWidth / 390, window.innerHeight / 720);
+    // Size to the part of the screen that is really visible: minus browser bars and phone insets.
+    const cs = getComputedStyle(app);
+    const insets = (parseFloat(cs.paddingTop) || 0) + (parseFloat(cs.paddingBottom) || 0);
+    const h = (window.visualViewport ? window.visualViewport.height : window.innerHeight) - insets;
+    const s = Math.min(window.innerWidth / 390, h / 720);
     document.documentElement.style.fontSize = Math.max(8, 16 * s) + 'px';
   }
   window.addEventListener('resize', fit);
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
   fit();
 
   // ---------- stations ----------

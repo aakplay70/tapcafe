@@ -10,6 +10,9 @@
   --accent-d: #C9557D;
   --gold: #FFE3A3;
   --green: #4FA58C;
+  /* Phones that draw the page under the status bar or gesture bar report these insets. */
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
 }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 [hidden] { display: none !important; }
@@ -30,6 +33,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
   position: relative;
   width: 24.375rem; max-width: 100vw;
   height: 100vh; height: 100dvh;
+  padding-top: var(--sat); padding-bottom: var(--sab);
   background: var(--cream);
   display: flex; flex-direction: column;
   overflow: hidden;
@@ -150,7 +154,7 @@ button { font: inherit; color: inherit; cursor: pointer; border: 0; background: 
 
 /* ---------- work area ---------- */
 #work {
-  flex: 1.4 1 21.8rem; min-height: 0;
+  flex: 1.4 0 21.8rem; /* never squeeze the buttons; the shop above gives up space instead */
   display: flex; flex-direction: column; justify-content: space-evenly;
   padding: .3rem .7rem .6rem;
   background: var(--cream);
