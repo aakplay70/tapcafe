@@ -231,6 +231,7 @@
   // ---------- tutorial ----------
   function endTutorial() {
     G.tutorial = false;
+    TC.track('tutorial_done', { daily: daily.num });
     hand.hidden = true;
     store.set('tutorialSeen', '1');
   }
@@ -273,13 +274,19 @@
     slotEls.forEach((s) => { s.innerHTML = ''; });
     G.pending = null;
     renderUps();
-    TC.track('game_start', { daily: daily.num });
-    overlay.hidden = true;
+    // Anonymous counters kept in this browser only: games today, and distinct days played.
+    const gameOfDay = (parseInt(store.get('plays.' + daily.ds), 10) || 0) + 1;
+    store.set('plays.' + daily.ds, String(gameOfDay));
+    let daysPlayed = parseInt(store.get('daysPlayed'), 10) || 0;
+    if (store.get('lastDay') !== daily.ds) { daysPlayed++; store.set('daysPlayed', String(daysPlayed)); store.set('lastDay', daily.ds); }
+    TC.track('game_start', { daily: daily.num, game_of_day: gameOfDay, days_played: daysPlayed });
+    overlay.hidden = true; overlay.innerHTML = '';
     startRound();
   }
 
   function startRound() {
     G.time = 0; G.q = 0; G.lastSpawn = -9;
+    G.atRoundStart = { served: G.served, walkouts: G.walkouts, earned: G.earned };
     resetCup();
     renderHud();
     showBanner('Round ' + (G.round + 1), 1100);
@@ -299,6 +306,11 @@
 
   function endRound() {
     G.playing = false;
+    const s = G.atRoundStart || { served: 0, walkouts: 0, earned: 0 };
+    TC.track('round_end', {
+      daily: daily.num, round: G.round + 1, earned: G.earned,
+      round_earned: G.earned - s.earned, round_served: G.served - s.served, round_walkouts: G.walkouts - s.walkouts,
+    });
     hand.hidden = true;
     G.slots.forEach((c) => { if (c && c.state === 'wait') leave(c, 'bye', 700); });
     resetCup();
@@ -411,17 +423,26 @@
       '<div class="ups">' + cards + '</div>' +
       '<div class="row"><button class="btn alt" id="bSkip" type="button">Skip</button></div>'
     );
-    const next = () => { overlay.hidden = true; G.round++; startRound(); };
+    let done = false; // a double-tap must not buy twice or skip two rounds
+    const next = () => { overlay.hidden = true; overlay.innerHTML = ''; G.round++; startRound(); };
     overlay.querySelectorAll('.up').forEach((b) => b.addEventListener('click', () => {
       const k = b.dataset.k, U = C.upgrades[k];
-      if (G.cash < U.price) return;
+      if (done || G.cash < U.price) return;
+      done = true;
       G.cash -= U.price; G.spent += U.price; G.ups[k]++;
       TC.audio.sfx('buy');
+      TC.track('upgrade_bought', { daily: daily.num, item: k, round: G.round + 1, owned: G.ups[k], cash_left: G.cash });
       renderUps();
       next();
       setTimeout(() => showBanner(U.ico + ' ' + U.name + '!', 1000), 1150);
     }));
-    $('#bSkip').addEventListener('click', next);
+    $('#bSkip').addEventListener('click', () => {
+      if (done) return;
+      done = true;
+      const affordable = offers.filter((k) => G.cash >= C.upgrades[k].price).length;
+      TC.track('upgrade_skipped', { daily: daily.num, round: G.round + 1, cash: G.cash, could_afford: affordable });
+      next();
+    });
   }
 
   function countdownText() {
@@ -441,6 +462,7 @@
     const prev = getBest(daily.ds);
     const isBest = !prev || score > prev.score;
     if (isBest) store.set('best.' + daily.ds, JSON.stringify({ score }));
+    if (prev && score > prev.score) TC.track('new_best', { daily: daily.num, score, previous: prev.score });
     const best = isBest ? { score } : prev;
     show(
       '<div class="muted">Daily #' + daily.num + ' · you earned</div>' +
@@ -452,9 +474,10 @@
       '<div class="row"><button class="btn alt sm" id="bHome" type="button">Home</button></div>' +
       '<div class="muted" style="margin-top:.8rem">Next challenge in <b id="cd">' + countdownText() + '</b></div>'
     );
-    $('#bAgain').addEventListener('click', startGame);
-    $('#bHome').addEventListener('click', () => { clearInterval(countdownTimer); showTitle(); });
-    $('#bShare').addEventListener('click', () => { TC.track('share_open', { daily: daily.num }); showShare(best); });
+    const choice = (c) => TC.track('end_choice', { daily: daily.num, choice: c, score });
+    $('#bAgain').addEventListener('click', () => { choice('replay'); startGame(); });
+    $('#bHome').addEventListener('click', () => { choice('home'); clearInterval(countdownTimer); showTitle(); });
+    $('#bShare').addEventListener('click', () => { choice('share'); TC.track('share_open', { daily: daily.num }); showShare(best); });
     clearInterval(countdownTimer);
     countdownTimer = setInterval(() => { const e = $('#cd'); if (e) e.textContent = countdownText(); }, 1000);
   }
@@ -486,13 +509,14 @@
     const bPic = $('#bPic');
     if (bPic) bPic.addEventListener('click', async () => {
       try {
-        if (canShareFile) await navigator.share({ files: [file], text });
-        else { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); toast('Picture copied!'); }
+        if (canShareFile) { await navigator.share({ files: [file], text }); TC.track('share_done', { daily: d.num, method: 'share_menu' }); }
+        else { await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]); toast('Picture copied!'); TC.track('share_done', { daily: d.num, method: 'copy_picture' }); }
       } catch (e) { if (e && e.name !== 'AbortError') toast('That did not work here. Press and hold the picture instead.'); }
     });
     $('#bText').addEventListener('click', async () => {
       try { await navigator.clipboard.writeText(text); toast('Text copied!'); }
       catch (e) { window.prompt('Copy this:', text); }
+      TC.track('share_done', { daily: d.num, method: 'copy_text' });
     });
   }
 
@@ -527,7 +551,7 @@
   }
   function resume() {
     if (!G.paused) return;
-    overlay.hidden = true;
+    overlay.hidden = true; overlay.innerHTML = '';
     G.paused = false; G.playing = true;
     last = performance.now();
     TC.audio.music('r' + (G.round + 1));
@@ -558,7 +582,12 @@
 
   const muteBtn = $('#mute');
   const paintMute = () => { muteBtn.textContent = TC.audio.isMuted() ? '🔇' : '🔊'; };
-  muteBtn.addEventListener('click', () => { TC.audio.unlock(); TC.audio.toggleMute(); paintMute(); });
+  muteBtn.addEventListener('click', () => {
+    TC.audio.unlock();
+    const m = TC.audio.toggleMute();
+    paintMute();
+    TC.track('mute_toggled', { muted: m, playing: !!G.playing });
+  });
   paintMute();
   document.addEventListener('click', (e) => { if (e.target.closest && e.target.closest('.btn')) TC.audio.sfx('tap'); });
 
