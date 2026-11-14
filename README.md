@@ -3,7 +3,7 @@
 A cute two-minute boba-shop tap game for mobile browsers. No install, no account.
 Everyone gets the same customers each day (Daily #1 = Nov 11, 2026).
 
-**Play:** https://tapcafe-game.web.app
+**Play:** https://tapcafe.web.app
 
 - Play locally: `powershell -ExecutionPolicy Bypass -File serve.ps1`, then open http://localhost:8123
 - Tuning numbers (round lengths, patience, prices, star cutoffs) are all in `js/core.js` under `TC.CFG`.
