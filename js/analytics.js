@@ -1,6 +1,5 @@
 /* Tap Café — anonymous play stats via Firebase / Google Analytics.
-   Only loads on the Firebase-hosted site (it uses Hosting's built-in config), so local
-   play and the GitHub copy send nothing. Does nothing if Do Not Track is on. */
+   Only loads on the Firebase-hosted site, so local play sends nothing. Does nothing if Do Not Track is on. */
 (function () {
   'use strict';
   const TC = window.TC || (window.TC = {});
@@ -29,10 +28,18 @@
   }
   load('/__/firebase/' + V + '/firebase-app-compat.js')
     .then(() => load('/__/firebase/' + V + '/firebase-analytics-compat.js'))
-    .then(() => load('/__/firebase/init.js'))
     .then(() => {
-      // init.js only has a measurement ID once Google Analytics is enabled on the project.
-      if (!window.firebase || !window.firebase.apps.length || !window.firebase.app().options.measurementId) return;
+      // Public web config from the Firebase console (these values are identifiers, not secrets).
+      window.firebase.initializeApp({
+        apiKey: 'AIzaSyBXp_RQiS2nJD_ukrOApG-MAZttMp9pkWk',
+        authDomain: 'tapcafe-game.firebaseapp.com',
+        projectId: 'tapcafe-game',
+        storageBucket: 'tapcafe-game.firebasestorage.app',
+        messagingSenderId: '650594046866',
+        appId: '1:650594046866:web:af2d08c94449c20227674b',
+        measurementId: 'G-TG20XV4ENJ',
+      });
+      window.firebase.analytics();
       ready = true;
       queue.splice(0).forEach((q) => TC.track(q[0], q[1]));
     })
