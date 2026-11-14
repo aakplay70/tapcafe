@@ -496,19 +496,65 @@
     });
   }
 
+  // ---------- pause ----------
+  const pauseBtn = $('#pause');
+  function pause() {
+    if (!G.playing || G.paused) return;
+    G.paused = true; G.playing = false;
+    hand.hidden = true;
+    TC.audio.stopPour();
+    TC.audio.music('lobby');
+    const left = Math.max(0, Math.ceil(C.rounds[G.round].len - G.time));
+    show(
+      '<div class="h2">Paused</div>' +
+      '<div class="muted">Round ' + (G.round + 1) + ' · ' + left + 's left · $' + G.cash + '</div>' +
+      '<div class="row"><button class="btn" id="bResume" type="button">Resume</button></div>' +
+      '<div class="row"><button class="btn alt sm" id="bRestart" type="button">Restart</button>' +
+      '<button class="btn alt sm" id="bQuit" type="button">Quit</button></div>'
+    );
+    $('#bResume').addEventListener('click', resume);
+    $('#bRestart').addEventListener('click', () => {
+      TC.track('game_restart', { daily: daily.num, round: G.round + 1 });
+      G.paused = false; startGame();
+    });
+    $('#bQuit').addEventListener('click', () => {
+      TC.track('game_quit', { daily: daily.num, round: G.round + 1, time: Math.round(G.time), earned: G.earned });
+      G.paused = false;
+      slotEls.forEach((s) => { s.innerHTML = ''; });
+      G.slots = [null, null, null]; G.pending = null;
+      showTitle();
+    });
+  }
+  function resume() {
+    if (!G.paused) return;
+    overlay.hidden = true;
+    G.paused = false; G.playing = true;
+    last = performance.now();
+    TC.audio.music('r' + (G.round + 1));
+  }
+  pauseBtn.addEventListener('click', pause);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'p' || e.key === 'P') { if (G.paused) resume(); else pause(); }
+  });
+
   // ---------- main loop (pauses while the tab is hidden) ----------
   let last = 0;
   function frame(ts) {
     requestAnimationFrame(frame);
     const dt = Math.min(0.1, (ts - last) / 1000 || 0);
     last = ts;
+    const vis = G.playing ? 'visible' : 'hidden';
+    if (pauseBtn.style.visibility !== vis) pauseBtn.style.visibility = vis;
     if (document.hidden) return;
     if (G.playing) {
       update(dt);
       if (G.tutorial) placeHand();
     }
   }
-  document.addEventListener('visibilitychange', () => { last = performance.now(); });
+  document.addEventListener('visibilitychange', () => {
+    last = performance.now();
+    if (document.hidden) pause(); // leaving the tab shows the pause screen on return
+  });
 
   const muteBtn = $('#mute');
   const paintMute = () => { muteBtn.textContent = TC.audio.isMuted() ? '🔇' : '🔊'; };
